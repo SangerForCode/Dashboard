@@ -856,10 +856,12 @@ export function chartOption(
           graphic: [
             {
               type: "text",
-              left: "30%",
-              top: "43%",
+              left: "40%",
+              top: "45%",
               style: {
                 text: `${all.length} assets`,
+                align: "center",
+                verticalAlign: "middle",
                 fontSize: 25,
                 fontWeight: 500,
                 fill: "#3c3953",
@@ -867,10 +869,12 @@ export function chartOption(
             },
             {
               type: "text",
-              left: "31%",
-              top: "53%",
+              left: "40%",
+              top: "55%",
               style: {
                 text: "Across " + groups.length + " sectors",
+                align: "center",
+                verticalAlign: "middle",
                 fontSize: 12,
                 fill: "#94909f",
               },
