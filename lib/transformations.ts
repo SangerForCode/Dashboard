@@ -391,6 +391,8 @@ export function chartOption(
             show: true,
             position: "right",
             formatter: (p) => Number(p.value).toFixed(1),
+            color: theme.sankeyLabel,
+            textBorderColor: "transparent",
           },
         },
       ],
