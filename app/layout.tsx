@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Folio — Financial clarity",
+  title: "Folio",
   description:
     "Explore portfolio performance, asset relationships and financial insights with a reproducible market simulation.",
   other: {
