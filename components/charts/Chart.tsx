@@ -31,6 +31,7 @@ export default function Chart({
   useEffect(() => {
     let active = true;
     let observer: ResizeObserver | undefined;
+    let frame: number;
     setReady(false);
     setError("");
     (async () => {
@@ -48,7 +49,10 @@ export default function Chart({
         const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
         chart.current.setOption({ ...latest.current, animation: !reduced });
         chart.current.on("click", (p) => handler.current(p as ChartClick));
-        observer = new ResizeObserver(() => chart.current?.resize());
+        observer = new ResizeObserver(() => {
+          cancelAnimationFrame(frame);
+          frame = requestAnimationFrame(() => chart.current?.resize());
+        });
         observer.observe(element.current);
         setReady(true);
       } catch (e) {
@@ -60,6 +64,7 @@ export default function Chart({
     })();
     return () => {
       active = false;
+      cancelAnimationFrame(frame);
       observer?.disconnect();
       chart.current?.dispose();
       chart.current = null;
