@@ -34,11 +34,13 @@ export default function NetworkGraph({
   selected,
   onSelect,
   threshold,
+  isDark = false,
 }: {
   assets: Asset[];
   selected: string;
   onSelect: (ticker: string) => void;
   threshold: number;
+  isDark?: boolean;
 }) {
   const [layoutVersion, setLayoutVersion] = useState(0);
   const svg = useRef<SVGSVGElement>(null);
@@ -76,7 +78,7 @@ export default function NetworkGraph({
       .selectAll("line")
       .data(edges)
       .join("line")
-      .attr("stroke", "#b6b1d5")
+      .attr("stroke", isDark ? "#556390" : "#b6b1d5")
       .attr("stroke-width", (d) => Math.max(0.5, d.strength * 2.5))
       .attr("stroke-opacity", (d) => d.strength * 0.7);
     const ns = g
@@ -176,7 +178,7 @@ export default function NetworkGraph({
       sim.stop();
       root.on(".zoom", null);
     };
-  }, [stableKey, layoutVersion]);
+  }, [stableKey, layoutVersion, isDark]);
   useEffect(() => {
     if (!svg.current) return;
     const connected = new Set(

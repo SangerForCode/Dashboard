@@ -30,6 +30,34 @@
   --sidebar-border: #e8e8ef;
   --sidebar-ring: #6664df;
 }
+.dark, [data-theme="dark"] {
+  --background: #090b12;
+  --foreground: #eef2f8;
+  --card: #121620;
+  --card-foreground: #eef2f8;
+  --popover: #161c2a;
+  --popover-foreground: #eef2f8;
+  --primary: #6677e8;
+  --primary-foreground: #ffffff;
+  --secondary: #171b25;
+  --secondary-foreground: #9ba6b8;
+  --muted: #151924;
+  --muted-foreground: #9ba6b8;
+  --accent: rgba(102, 119, 232, 0.15);
+  --accent-foreground: #9aaeff;
+  --destructive: #e07283;
+  --border: rgba(170, 190, 225, 0.12);
+  --input: rgba(170, 190, 225, 0.14);
+  --ring: #6677e8;
+  --sidebar: #0d1017;
+  --sidebar-foreground: #9ba6b8;
+  --sidebar-primary: #6677e8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(102, 119, 232, 0.12);
+  --sidebar-accent-foreground: #9aaeff;
+  --sidebar-border: rgba(170, 190, 225, 0.10);
+  --sidebar-ring: #6677e8;
+}
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -65,8 +93,14 @@ body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
   font-size: 16px;
-  background: #fff;
-  color: #282a3b;
+  background: var(--background);
+  color: var(--foreground);
+  transition: background-color 450ms cubic-bezier(0.22, 1, 0.36, 1), color 450ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
 }
 button,
 a,
@@ -87,6 +121,24 @@ button:disabled {
 }
 .app-sidebar {
   --sidebar-width: 232px;
+}
+[data-slot="sidebar-container"].app-sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  height: 100dvh;
+  overflow: hidden;
+  transform: translateZ(0);
+}
+[data-slot="sidebar-container"].app-sidebar [data-slot="sidebar-inner"] {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+[data-slot="sidebar-container"].app-sidebar [data-slot="sidebar-content"] {
+  overscroll-behavior: contain;
 }
 .brand {
   display: flex;
@@ -217,6 +269,9 @@ button:disabled {
   flex: 1;
 }
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
   height: 73px;
   border-bottom: 1px solid #ededf3;
   display: flex;
@@ -225,6 +280,10 @@ button:disabled {
   padding: 0 38px;
   font-size: 12px;
   color: #8d8e9d;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 10px 26px rgba(55, 63, 90, 0.05);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
 }
 .topbar > div,
 .topbar-right {
@@ -387,7 +446,7 @@ h1 {
   border: 1px solid #eceafa;
   border-radius: 9px;
   padding: 16px 20px;
-  margin-bottom: 26px;
+  margin-bottom: 40px;
   color: #7268c5;
 }
 .insight-strip b {
@@ -410,7 +469,7 @@ h1 {
   border: 1px solid #e7e7f0;
   border-radius: 10px;
   background: #fff;
-  overflow: hidden;
+  overflow: clip;
 }
 .panel-heading {
   display: flex;
@@ -479,7 +538,7 @@ footer {
   margin-top: 28px;
   padding-bottom: 6px;
 }
-button {
+button:not([data-slot="switch"]) {
   min-height: 36px;
 }
 [data-slot="select-trigger"] {
@@ -923,6 +982,7 @@ h4 {
 .network-wrap {
   position: relative;
   height: 390px;
+  overflow: hidden;
   background-image: radial-gradient(#dedce9 0.6px, transparent 0.6px);
   background-size: 18px 18px;
 }
@@ -949,6 +1009,7 @@ h4 {
 }
 .network-controls button {
   width: 35px;
+  height: 35px;
   display: grid;
   place-items: center;
   border-right: 1px solid #eeeaf5;
@@ -1531,4 +1592,393 @@ dl > div {
 .connection,
 .show-all {
   min-height: 44px;
+}
+
+/* Dark mode is intentionally layered rather than black: charts retain a stable,
+   opaque reading surface while navigation and controls pick up the soft glass. */
+[data-theme="dark"] {
+  --canvas: #080a10;
+  --surface: rgba(18, 22, 32, 0.74);
+  --surface-raised: rgba(27, 33, 48, 0.82);
+  --surface-muted: #10141e;
+  --text-strong: #eef2f8;
+  --text-muted: #9ba6b8;
+  --text-faint: #758197;
+  --line-subtle: rgba(170, 190, 225, 0.12);
+  --line-faint: rgba(170, 190, 225, 0.08);
+  --glow-blue: rgba(79, 132, 244, 0.28);
+  --glow-violet: rgba(113, 100, 227, 0.22);
+  --positive: #56c6ac;
+  --negative: #e48191;
+  --warning: #d8ad62;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(60rem 42rem at 88% -10%, var(--glow-blue), transparent 58%),
+    radial-gradient(46rem 40rem at -8% 94%, var(--glow-violet), transparent 62%),
+    var(--canvas);
+}
+
+[data-theme="dark"] .app-sidebar,
+[data-theme="dark"] [data-slot="sidebar"],
+[data-theme="dark"] [data-slot="sidebar-container"] {
+  background: rgba(13, 16, 23, 0.9);
+  border-color: var(--line-subtle);
+  backdrop-filter: blur(18px);
+}
+
+[data-theme="dark"] .topbar {
+  background: rgba(8, 10, 16, 0.78);
+  border-color: var(--line-subtle);
+  color: var(--text-muted);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(20px) saturate(130%);
+}
+
+[data-theme="dark"] .topbar b,
+[data-theme="dark"] .brand,
+[data-theme="dark"] .sidebar-note b,
+[data-theme="dark"] .empty h3 {
+  color: var(--text-strong);
+}
+
+[data-theme="dark"] .brand-mark {
+  background: linear-gradient(145deg, #7588f2, #586bd3);
+  box-shadow: 0 6px 20px rgba(102, 119, 232, 0.25);
+}
+
+[data-theme="dark"] .brand-dot,
+[data-theme="dark"] .note-icon,
+[data-theme="dark"] .dataset-row [data-slot="tabs-trigger"][data-state="active"] {
+  color: #9aaeff;
+}
+
+[data-theme="dark"] .workspace,
+[data-theme="dark"] .profile,
+[data-theme="dark"] .dataset-row,
+[data-theme="dark"] .metrics > div,
+[data-theme="dark"] .explorer-controls,
+[data-theme="dark"] .desktop-table,
+[data-theme="dark"] .asset-detail,
+[data-theme="dark"] .chart-explanation,
+[data-theme="dark"] .connection,
+[data-theme="dark"] dl > div,
+[data-theme="dark"] .asset-card {
+  border-color: var(--line-subtle);
+}
+
+[data-theme="dark"] .workspace-icon,
+[data-theme="dark"] .profile > span,
+[data-theme="dark"] .avatar {
+  background: rgba(132, 151, 205, 0.14);
+  color: #c7d2ed;
+}
+
+[data-theme="dark"] .workspace small,
+[data-theme="dark"] .profile small,
+[data-theme="dark"] .nav-label,
+[data-theme="dark"] .sidebar-note p,
+[data-theme="dark"] .muted,
+[data-theme="dark"] .eyebrow,
+[data-theme="dark"] .page-heading p,
+[data-theme="dark"] .metrics span,
+[data-theme="dark"] .metrics small,
+[data-theme="dark"] .panel-heading p,
+[data-theme="dark"] .picker > span,
+[data-theme="dark"] .date-filter,
+[data-theme="dark"] .chart-legend,
+[data-theme="dark"] .chart-legend b,
+[data-theme="dark"] .detail-sector,
+[data-theme="dark"] dt,
+[data-theme="dark"] .detail-help,
+[data-theme="dark"] .connection span,
+[data-theme="dark"] .section-heading p,
+[data-theme="dark"] .company-cell small,
+[data-theme="dark"] footer {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] [data-slot="sidebar-menu-button"][data-active="true"] {
+  background: linear-gradient(90deg, rgba(102, 119, 232, 0.18), rgba(102, 119, 232, 0.05));
+  color: #dce5ff;
+  box-shadow: inset 1px 0 0 #8fa7ff, inset 0 1px 0 rgba(198, 211, 255, 0.08);
+}
+
+[data-theme="dark"] [data-slot="sidebar-menu-button"]:hover {
+  background: rgba(142, 162, 220, 0.08);
+  color: var(--text-strong);
+}
+
+[data-theme="dark"] .nav-indicator {
+  background: #9aaeff;
+  box-shadow: 0 0 10px rgba(154, 174, 255, 0.75);
+}
+
+[data-theme="dark"] .live-button,
+[data-theme="dark"] [data-slot="select-trigger"],
+[data-theme="dark"] .date-filter input,
+[data-theme="dark"] .search-filter,
+[data-theme="dark"] .panel-actions button,
+[data-theme="dark"] .network-controls {
+  background: var(--surface);
+  border-color: var(--line-subtle);
+  color: var(--text-muted);
+  box-shadow: inset 0 1px rgba(213, 223, 255, 0.04);
+}
+
+[data-theme="dark"] .theme-toggle {
+  background: rgba(116, 137, 207, 0.12);
+  border: 1px solid rgba(151, 172, 233, 0.2);
+  color: #cbd7ff;
+  box-shadow: inset 0 1px rgba(235, 240, 255, 0.08), 0 5px 18px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--secondary);
+  color: var(--foreground);
+  transition: color 450ms cubic-bezier(0.22, 1, 0.36, 1), background-color 450ms cubic-bezier(0.22, 1, 0.36, 1), border-color 450ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 450ms cubic-bezier(0.22, 1, 0.36, 1), transform 200ms ease;
+}
+
+.theme-toggle:hover { transform: translateY(-1px); }
+.theme-toggle:active { transform: translateY(0); }
+
+[data-theme="dark"] .panel,
+[data-theme="dark"] .insight-card,
+[data-theme="dark"] .desktop-table,
+[data-theme="dark"] .expanded {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.035), transparent 30%), var(--surface);
+  border-color: rgba(182, 201, 245, 0.15);
+  box-shadow: inset 0 1px rgba(225, 233, 255, 0.09), 0 18px 50px rgba(0, 0, 0, 0.24);
+}
+
+[data-theme="dark"] .insight-card,
+[data-theme="dark"] .panel {
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+[data-theme="dark"] .insight-strip {
+  background: linear-gradient(100deg, rgba(82, 101, 196, 0.2), rgba(27, 33, 48, 0.7));
+  border-color: rgba(142, 163, 235, 0.18);
+  color: #aabaff;
+}
+
+[data-theme="dark"] .insight-strip b { color: #e0e7ff; }
+[data-theme="dark"] .insight-strip p,
+[data-theme="dark"] .insight-card p,
+[data-theme="dark"] .empty { color: var(--text-muted); }
+
+[data-theme="dark"] .chart-toolbar [data-slot="tabs-list"],
+[data-theme="dark"] .desktop-table th,
+[data-theme="dark"] .chart-explanation,
+[data-theme="dark"] .chart-loading {
+  background: var(--surface-muted);
+}
+
+[data-theme="dark"] .chart-loading { color: var(--text-muted); }
+[data-theme="dark"] .desktop-table th { color: var(--text-muted); }
+[data-theme="dark"] .desktop-table tr { border-color: var(--line-faint); }
+[data-theme="dark"] .desktop-table tr:hover,
+[data-theme="dark"] .selected-row { background: rgba(108, 128, 202, 0.11); }
+[data-theme="dark"] .sector-label { border-color: var(--line-subtle); color: var(--text-muted); }
+[data-theme="dark"] .weight-track { background: rgba(177, 194, 232, 0.14); }
+
+[data-theme="dark"] .network-wrap {
+  background-color: #10141e;
+  background-image: radial-gradient(rgba(167, 186, 232, 0.14) 0.6px, transparent 0.6px);
+}
+
+[data-theme="dark"] .network-controls button { border-color: var(--line-subtle); }
+[data-theme="dark"] .network-hint,
+[data-theme="dark"] .threshold label,
+[data-theme="dark"] .switch-label,
+[data-theme="dark"] .toolbar-caption { color: var(--text-muted); }
+[data-theme="dark"] .mobile-tree details { border-color: rgba(154, 174, 255, 0.3); }
+
+[data-theme="dark"] .positive { color: var(--positive) !important; }
+[data-theme="dark"] .negative { color: var(--negative) !important; }
+[data-theme="dark"] .risk-dot { background: var(--warning); }
+[data-theme="dark"] .sector-dot { background: #91a7ff; }
+[data-theme="dark"] .live-dot,
+[data-theme="dark"] .simulation-label span { box-shadow: 0 0 9px rgba(86, 198, 172, 0.55); }
+
+[data-theme="dark"] input::placeholder { color: var(--text-faint); }
+[data-theme="dark"] ::selection { background: rgba(122, 145, 235, 0.35); color: var(--text-strong); }
+[data-theme="dark"] * { scrollbar-color: #4c5877 #10141e; }
+
+html[data-theme="dark"]::view-transition-old(root),
+html[data-theme="dark"]::view-transition-new(root) {
+  animation-duration: 480ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html[data-theme="dark"]::view-transition-new(root) {
+  animation-name: theme-reveal;
+}
+
+@keyframes theme-reveal {
+  from { clip-path: circle(0 at 88% 36px); }
+  to { clip-path: circle(150vmax at 88% 36px); }
+}
+
+/* Keep type flat and calm on dark surfaces: no accidental strokes, halos, or
+   mixed light-theme values leaking through component defaults. */
+[data-theme="dark"] :is(h1, h2, h3, h4, p, span, small, b, strong, td, th, label, dt, dd, button, input) {
+  -webkit-text-stroke: 0 transparent;
+  text-shadow: none;
+}
+
+[data-theme="dark"] .app-sidebar,
+[data-theme="dark"] [data-slot="sidebar-container"] [data-slot="sidebar-inner"] {
+  background: linear-gradient(180deg, rgba(22, 28, 42, 0.82), rgba(10, 13, 20, 0.9));
+  box-shadow: inset -1px 0 rgba(199, 214, 255, 0.05), 18px 0 50px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(22px) saturate(135%);
+}
+
+[data-theme="dark"] [data-slot="sidebar-container"].app-sidebar {
+  z-index: 40;
+}
+
+[data-theme="dark"] [data-slot="sidebar-container"].app-sidebar [data-slot="sidebar-inner"] {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Fixed top-right corner glow removed */
+
+[data-theme="dark"] .app-main {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-theme="dark"] [data-slot="select-content"],
+[data-theme="dark"] [data-slot="popover-content"],
+[data-theme="dark"] [role="dialog"],
+[data-theme="dark"] [data-slot="tooltip-content"] {
+  background: rgba(24, 30, 44, 0.88);
+  border-color: rgba(182, 201, 245, 0.18);
+  box-shadow: inset 0 1px rgba(232, 238, 255, 0.08), 0 20px 48px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(20px) saturate(140%);
+}
+
+[data-theme="dark"] :is(button, a, input, [role="tab"]):focus-visible {
+  outline-color: #9aafff;
+  box-shadow: 0 0 0 4px rgba(125, 151, 245, 0.2);
+}
+
+/* The registry component is dormant in light mode, preserving the existing
+   light dashboard. In dark mode it adds a cursor-led edge light to the main
+   analytics panel without changing the panel's information density. */
+.analytics-glow-frame {
+  display: block;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none !important;
+  isolation: auto;
+}
+
+.analytics-glow-frame::before,
+.analytics-glow-frame::after,
+.analytics-glow-frame > .edge-light {
+  display: none;
+}
+
+.analytics-glow-frame .border-glow-inner {
+  display: block;
+  overflow: visible;
+}
+
+html[data-theme="dark"] .analytics-glow-frame {
+  border: 1px solid rgba(182, 201, 245, 0.14);
+  border-radius: 10px;
+  background: rgba(18, 22, 32, 0.24);
+  box-shadow: 0 20px 58px rgba(0, 0, 0, 0.22);
+  isolation: isolate;
+}
+
+/* The React Bits mesh fill is intentionally suppressed here. Some browser
+   mask implementations paint it over canvas/SVG charts, which hides data. */
+html[data-theme="dark"] .analytics-glow-frame::before,
+html[data-theme="dark"] .analytics-glow-frame::after,
+html[data-theme="dark"] .analytics-glow-frame > .edge-light {
+  display: none;
+}
+
+html[data-theme="dark"] .analytics-glow-frame .panel {
+  border-color: transparent;
+  box-shadow: inset 0 1px rgba(225, 233, 255, 0.07);
+}
+
+html[data-theme="dark"] .chart-wrap,
+html[data-theme="dark"] .network-wrap {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: rgba(14, 18, 28, 0.26);
+  background-image:
+    radial-gradient(rgba(167, 186, 232, 0.11) 0.6px, transparent 0.6px),
+    radial-gradient(24rem 16rem at 78% 0%, rgba(121, 167, 255, 0.12), transparent 62%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.025), transparent 38%);
+  background-size: 18px 18px, auto, auto;
+}
+
+html[data-theme="dark"] .chart-wrap::before,
+html[data-theme="dark"] .network-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background: radial-gradient(18rem circle at var(--graph-glow-x, 50%) var(--graph-glow-y, 50%), rgba(121, 167, 255, 0.16), transparent 70%);
+  opacity: 0;
+  transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .chart-wrap:hover::before,
+html[data-theme="dark"] .chart-wrap:focus-within::before,
+html[data-theme="dark"] .network-wrap:hover::before,
+html[data-theme="dark"] .network-wrap:focus-within::before {
+  opacity: 1;
+}
+
+html[data-theme="dark"] .chart-wrap > *,
+html[data-theme="dark"] .network-wrap > * {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-theme="dark"] .insight-spotlight {
+  margin-bottom: 40px;
+  border: 1px solid rgba(144, 167, 238, 0.17);
+  border-radius: 9px;
+  overflow: hidden;
+  background: rgba(23, 29, 43, 0.56);
+  box-shadow: inset 0 1px rgba(225, 233, 255, 0.06), 0 16px 42px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(18px) saturate(135%);
+}
+
+html[data-theme="dark"] .insight-spotlight .insight-strip {
+  margin-bottom: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+@supports not ((backdrop-filter: blur(1px))) {
+  [data-theme="dark"] .panel,
+  [data-theme="dark"] .insight-card,
+  [data-theme="dark"] .desktop-table,
+  [data-theme="dark"] .topbar,
+  [data-theme="dark"] .app-sidebar {
+    background-color: #121620;
+  }
 }

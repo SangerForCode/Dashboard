@@ -55,6 +55,7 @@ import {
 } from "@/lib/transformations";
 import type { MarketSnapshot, Asset } from "@/types/market";
 import type { ChartClick } from "./charts/Chart";
+import BorderGlow from "@/components/BorderGlow";
 const Chart = lazy(() => import("./charts/Chart"));
 const NetworkGraph = lazy(() => import("./network/NetworkGraph"));
 function Picker({
@@ -149,6 +150,14 @@ export default function Explorer({
   section: string;
   dataset: string;
 }) {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    const check = () => setIsDark(document.documentElement.classList.contains("dark"));
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme"] });
+    return () => observer.disconnect();
+  }, []);
   const [view, setView] = useState<View>("Performance");
   const [metric, setMetric] = useState<ChartMetric>("Cumulative return");
   const [range, setRange] = useState("1Y");
@@ -302,7 +311,7 @@ export default function Explorer({
         distribution,
         allocation,
         dataset,
-      }),
+      }, isDark),
     [
       assets,
       snapshot.transactions,
@@ -319,6 +328,7 @@ export default function Explorer({
       distribution,
       allocation,
       dataset,
+      isDark,
     ],
   );
   function selectAsset(ticker: string) {
@@ -474,10 +484,21 @@ export default function Explorer({
   const q = (p: number) => vals[Math.floor((vals.length - 1) * p)] || 0;
   return (
     <>
-      <section
-        className={"panel explorer " + (expanded ? "expanded" : "")}
-        aria-label="Data explorer"
+      <BorderGlow
+        className="analytics-glow-frame"
+        glowColor="222 86 76"
+        backgroundColor="transparent"
+        borderRadius={10}
+        glowRadius={24}
+        glowIntensity={0.48}
+        coneSpread={20}
+        colors={["#79a7ff", "#6677e8", "#56c6ac"]}
+        fillOpacity={0.16}
       >
+        <section
+          className={"panel explorer " + (expanded ? "expanded" : "")}
+          aria-label="Data explorer"
+        >
         <div className="panel-heading">
           <div>
             <h2>
@@ -738,10 +759,11 @@ export default function Explorer({
                       selected={selected}
                       onSelect={selectAsset}
                       threshold={threshold}
+                      isDark={isDark}
                     />
                   ) : actualView === "Hierarchy" ? (
                     <div className="tree-layout">
-                      <Chart option={option} onClick={chartClick} />
+                      <Chart option={option} onClick={chartClick} isDark={isDark} />
                       <div className="mobile-tree">
                         <button onClick={() => setSector("All sectors")}>
                           Portfolio · {assets.length} assets
@@ -773,6 +795,7 @@ export default function Explorer({
                       option={option}
                       onClick={chartClick}
                       map={actualView === "Geography"}
+                      isDark={isDark}
                     />
                   )}
                 </Suspense>
@@ -838,7 +861,8 @@ export default function Explorer({
             </p>
           </div>
         </div>
-      </section>
+        </section>
+      </BorderGlow>
       {section === "Insights" ? (
         <div className="insights-heading">
           <h2>Patterns in your selection</h2>

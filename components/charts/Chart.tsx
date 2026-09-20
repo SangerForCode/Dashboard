@@ -12,16 +12,19 @@ export default function Chart({
   option,
   onClick,
   map = false,
+  isDark = false,
 }: {
   option: EChartsOption;
   onClick: (event: ChartClick) => void;
   map?: boolean;
+  isDark?: boolean;
 }) {
   const element = useRef<HTMLDivElement>(null);
   const chart = useRef<EChartsType | null>(null);
   const handler = useRef(onClick);
   handler.current = onClick;
   const latest = useRef(option);
+  const previousTheme = useRef(isDark);
   latest.current = option;
   const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
@@ -63,15 +66,19 @@ export default function Chart({
     };
   }, [map]);
   useEffect(() => {
-    if (chart.current)
+    if (chart.current) {
+      const changedTheme = previousTheme.current !== isDark;
       chart.current.setOption(
         {
           ...option,
           animation: !matchMedia("(prefers-reduced-motion: reduce)").matches,
         },
-        { notMerge: true },
+        // A palette change should not discard a user’s current zoom or hover state.
+        { notMerge: !changedTheme },
       );
-  }, [option]);
+      previousTheme.current = isDark;
+    }
+  }, [option, isDark]);
   return (
     <div className="chart-wrap">
       <div

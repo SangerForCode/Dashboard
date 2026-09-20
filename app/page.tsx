@@ -35,6 +35,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import SpotlightCard from "@/components/SpotlightCard";
 export default function Home() {
   const [source] = useState(() => createSimulationSource());
   const [snapshot, setSnapshot] = useState(() => source.initial());
@@ -49,6 +51,36 @@ export default function Home() {
     if (!live) return;
     return source.subscribe(setSnapshot);
   }, [live, source]);
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let frame = 0;
+    let graph: HTMLElement | null = null;
+    let x = 0;
+    let y = 0;
+    const paintGlow = () => {
+      frame = 0;
+      if (!graph) return;
+      const bounds = graph.getBoundingClientRect();
+      graph.style.setProperty("--graph-glow-x", `${x - bounds.left}px`);
+      graph.style.setProperty("--graph-glow-y", `${y - bounds.top}px`);
+    };
+    const followPointer = (event: PointerEvent) => {
+      if (reducedMotion.matches || event.pointerType === "touch") return;
+      const target = event.target;
+      graph = target instanceof Element
+        ? target.closest<HTMLElement>(".chart-wrap, .network-wrap")
+        : null;
+      if (!graph) return;
+      x = event.clientX;
+      y = event.clientY;
+      if (!frame) frame = requestAnimationFrame(paintGlow);
+    };
+    window.addEventListener("pointermove", followPointer, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", followPointer);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
   return (
     <SidebarProvider>
       <Sidebar className="app-sidebar">
@@ -122,6 +154,7 @@ export default function Home() {
           </div>
           <span className="topbar-right">
             <span className="demo-tag">DEMO</span>All values in INR{" "}
+            <ThemeToggle />
             <span className="avatar">AS</span>
           </span>
         </header>
@@ -207,19 +240,24 @@ export default function Home() {
               </small>
             </div>
           </div>
-          <div className="insight-strip">
-            <Sparkles size={20} />
-            <div>
-              <b>A connection worth exploring</b>
-              <p>{ideas[2]?.text}</p>
+          <SpotlightCard
+            className="insight-spotlight"
+            spotlightColor="rgba(121, 167, 255, 0.16)"
+          >
+            <div className="insight-strip">
+              <Sparkles size={20} />
+              <div>
+                <b>A connection worth exploring</b>
+                <p>{ideas[2]?.text}</p>
+              </div>
+              <button
+                onClick={() => setSection("Relationships")}
+                aria-label="Explore relationships"
+              >
+                <ArrowUpRight size={20} />
+              </button>
             </div>
-            <button
-              onClick={() => setSection("Relationships")}
-              aria-label="Explore relationships"
-            >
-              <ArrowUpRight size={20} />
-            </button>
-          </div>
+          </SpotlightCard>
           <Explorer snapshot={snapshot} section={section} dataset={dataset} />
           <footer>
             Built for understanding.{" "}

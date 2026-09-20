@@ -99,31 +99,51 @@ export function chartOption(
   assets: Asset[],
   transactions: Transaction[],
   s: ChartSettings,
+  isDark = false,
 ): EChartsOption {
-  const purple = "#6761df",
-    green = "#43a18b",
-    red = "#c76676";
+  const theme = isDark
+    ? {
+        primary: "#91a7ff", positive: "#56c6ac", negative: "#e48191",
+        text: "#9ba6b8", strong: "#eef2f8", grid: "rgba(170, 190, 225, 0.08)",
+        border: "rgba(170, 190, 225, 0.16)", tooltip: "rgba(20, 25, 36, 0.94)",
+        pale: "#23304d", map: "#1a2233", mapHover: "#293959", white: "#10141e",
+        neutral: "#687693", volume: "#687693", legend: "#9ba6b8", trend: "#687693",
+        tree: "#556390", sankeyLabel: "#9ba6b8", heatMid: "#1b2130", treemapPositive: "#56c6ac",
+        treemapNegative: "#e48191", correlationNegative: "#e48191",
+        monthlyNegative: "#e48191", monthlyPositive: "#56c6ac",
+      }
+    : {
+        primary: "#6761df", positive: "#43a18b", negative: "#c76676",
+        text: "#88899b", strong: "#343349", grid: "#f0f0f6",
+        border: "#e9e8f3", tooltip: "#fff", pale: "#ece9fb", map: "#eeedf5",
+        mapHover: "#dedbf0", white: "#fff", neutral: "#c6c4e5", volume: "#c6c4e5",
+        legend: "#818092", trend: "#aaa5c6", tree: "#d3cee9", sankeyLabel: "#767386",
+        heatMid: "#f4f1f8",
+        treemapPositive: "#76b4a8", treemapNegative: "#cc8d9a",
+        correlationNegative: "#d5808e", monthlyNegative: "#cc8494", monthlyPositive: "#68ad9a",
+      };
+  const purple = theme.primary, green = theme.positive, red = theme.negative;
   const grid = { left: 60, right: 25, top: 40, bottom: 64 };
   const base: EChartsOption = {
     animationDuration: 400,
     animationDurationUpdate: 500,
-    textStyle: { fontFamily: "Arial", fontSize: 12, color: "#88899b" },
+    textStyle: { fontFamily: "Arial", fontSize: 12, color: theme.text },
     color: Object.values(colors),
     grid,
     tooltip: {
       trigger: "item",
       confine: true,
-      backgroundColor: "#fff",
-      borderColor: "#e9e8f3",
-      textStyle: { color: "#343349", fontSize: 13 },
+      backgroundColor: theme.tooltip,
+      borderColor: theme.border,
+      textStyle: { color: theme.strong, fontSize: 13 },
     },
     aria: { enabled: true },
   };
   const ax = {
     axisLine: { show: false },
     axisTick: { show: false },
-    splitLine: { lineStyle: { color: "#f0f0f6" } },
-    axisLabel: { color: "#9899aa", fontSize: 11 },
+    splitLine: { lineStyle: { color: theme.grid } },
+    axisLabel: { color: theme.text, fontSize: 11 },
   };
   const all = assets;
   const groups = allocations(all);
@@ -226,8 +246,8 @@ export function chartOption(
                       x2: 0,
                       y2: 1,
                       colorStops: [
-                        { offset: 0, color: "#7067e326" },
-                        { offset: 1, color: "#7067e300" },
+                        { offset: 0, color: isDark ? "#91a7ff38" : "#7067e326" },
+                        { offset: 1, color: isDark ? "#91a7ff00" : "#7067e300" },
                       ],
                     },
                   }
@@ -252,7 +272,7 @@ export function chartOption(
         xAxisIndex: 1,
         yAxisIndex: 1,
         data: history.map((p) => p.volume),
-        itemStyle: { color: "#c6c4e5" },
+        itemStyle: { color: theme.volume },
       });
     return {
       ...base,
@@ -261,7 +281,7 @@ export function chartOption(
         left: 55,
         itemWidth: 15,
         itemHeight: 8,
-        textStyle: { color: "#818092" },
+        textStyle: { color: theme.legend },
       },
       grid: candles
         ? [
@@ -316,7 +336,7 @@ export function chartOption(
           height: 18,
           bottom: 10,
           borderColor: "transparent",
-          fillerColor: "#7770db18",
+          fillerColor: isDark ? "#91a7ff20" : "#7770db18",
           handleStyle: { color: purple },
           brushSelect: false,
         },
@@ -428,7 +448,7 @@ export function chartOption(
           itemStyle: {
             color: colors[g.name],
             opacity: 0.8,
-            borderColor: "#fff",
+            borderColor: theme.white,
             borderWidth: 2,
           },
         })),
@@ -442,7 +462,7 @@ export function chartOption(
                   [hi, my + slope * (hi - mx)],
                 ],
                 symbol: "none",
-                lineStyle: { color: "#aaa5c6", type: "dashed" as const },
+                lineStyle: { color: theme.trend, type: "dashed" as const },
               },
             ]
           : []),
@@ -483,7 +503,7 @@ export function chartOption(
         bottom: 0,
         itemWidth: 12,
         itemHeight: 110,
-        inRange: { color: ["#d5808e", "#f4f1f8", "#7365c9"] },
+        inRange: { color: [theme.correlationNegative, theme.heatMid, purple] },
         text: ["Move together", "Move apart"],
         textStyle: { fontSize: 10 },
       },
@@ -497,8 +517,8 @@ export function chartOption(
             })),
           ),
           label: { show: sorted.length <= 8, fontSize: 11 },
-          itemStyle: { borderColor: "#fff", borderWidth: 3 },
-          emphasis: { itemStyle: { borderColor: "#3e385d", borderWidth: 2 } },
+          itemStyle: { borderColor: theme.white, borderWidth: 3 },
+          emphasis: { itemStyle: { borderColor: purple, borderWidth: 2 } },
         },
       ],
     };
@@ -536,7 +556,7 @@ export function chartOption(
                 typical.at(-1)!,
               ],
             ],
-            itemStyle: { color: "#ece9fb", borderColor: purple },
+            itemStyle: { color: theme.pale, borderColor: purple },
           },
           {
             type: "scatter",
@@ -605,7 +625,7 @@ export function chartOption(
             fontSize: 13,
             lineHeight: 22,
           },
-          itemStyle: { borderColor: "#fff", borderWidth: 3, gapWidth: 3 },
+          itemStyle: { borderColor: theme.white, borderWidth: 3, gapWidth: 3 },
           data: all.map((a) => ({
             name: a.ticker,
             value:
@@ -621,8 +641,8 @@ export function chartOption(
                   : s.color === "Volatility"
                     ? a.volatility - 20
                     : a.daily) >= 0
-                  ? "#76b4a8"
-                  : "#cc8d9a",
+                  ? theme.treemapPositive
+                  : theme.treemapNegative,
             },
           })),
         },
@@ -654,7 +674,7 @@ export function chartOption(
           expandAndCollapse: true,
           label: { position: "left", fontSize: 12 },
           leaves: { label: { position: "right" } },
-          lineStyle: { color: "#d3cee9" },
+          lineStyle: { color: theme.tree },
           itemStyle: { color: purple },
         },
       ],
@@ -685,7 +705,7 @@ export function chartOption(
           nodeGap: 10,
           draggable: true,
           emphasis: { focus: "adjacency" },
-          label: { fontSize: 11, color: "#767386" },
+          label: { fontSize: 11, color: theme.sankeyLabel },
           lineStyle: { color: "source", opacity: 0.2, curveness: 0.5 },
           data: [
             { name: "Capital", itemStyle: { color: purple } },
@@ -729,9 +749,9 @@ export function chartOption(
       geo: {
         map: "world",
         roam: true,
-        itemStyle: { areaColor: "#eeedf5", borderColor: "#fff" },
+        itemStyle: { areaColor: theme.map, borderColor: theme.white },
         emphasis: {
-          itemStyle: { areaColor: "#dedbf0" },
+          itemStyle: { areaColor: theme.mapHover },
           label: { show: false },
         },
         left: 5,
@@ -787,7 +807,7 @@ export function chartOption(
         min: -15,
         max: 15,
         show: false,
-        inRange: { color: ["#cc8494", "#f6f2f7", "#68ad9a"] },
+        inRange: { color: [theme.monthlyNegative, theme.heatMid, theme.monthlyPositive] },
       },
       series: [
         {
@@ -805,7 +825,7 @@ export function chartOption(
               };
             }),
           ),
-          itemStyle: { borderColor: "#fff", borderWidth: 3 },
+          itemStyle: { borderColor: theme.white, borderWidth: 3 },
         },
       ],
     };
@@ -836,7 +856,7 @@ export function chartOption(
               center: ["40%", "50%"],
               label: { show: false },
               itemStyle: {
-                borderColor: "#fff",
+                borderColor: theme.white,
                 borderWidth: 4,
                 borderRadius: 5,
               },
@@ -864,7 +884,7 @@ export function chartOption(
                 verticalAlign: "middle",
                 fontSize: 25,
                 fontWeight: 500,
-                fill: "#3c3953",
+                fill: theme.strong,
               },
             },
             {
@@ -876,7 +896,7 @@ export function chartOption(
                 align: "center",
                 verticalAlign: "middle",
                 fontSize: 12,
-                fill: "#94909f",
+                fill: theme.text,
               },
             },
           ],
