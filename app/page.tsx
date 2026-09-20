@@ -1,17 +1,26 @@
 "use client";
-import { useState, useMemo, useEffect } from "react";
+import { Fragment, useState, useMemo, useEffect, useRef } from "react";
 import {
-  Activity,
   ArrowUpRight,
+  CalendarDays,
+  ChartCandlestick,
+  ChartColumn,
+  ChartNoAxesColumn,
   ChartNoAxesCombined,
-  Compass,
-  Network,
-  Wallet,
-  Layers,
+  ChartPie,
+  ChartScatter,
   ChevronRight,
+  Globe,
+  Grid3x3,
+  LayoutGrid,
+  ListTree,
+  Network,
   Pause,
   Play,
   Sparkles,
+  TrendingUp,
+  Waypoints,
+  type LucideIcon,
 } from "lucide-react";
 import Explorer from "@/components/Explorer";
 import { createSimulationSource } from "@/lib/market-source";
@@ -23,6 +32,7 @@ import {
   pct,
   portfolioStats,
 } from "@/lib/analytics";
+import { explanations, type View } from "@/lib/transformations";
 import {
   SidebarProvider,
   Sidebar,
@@ -32,25 +42,127 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import SpotlightCard from "@/components/SpotlightCard";
+// Every visualization the app can render, grouped by the question it answers.
+// This is the single source of navigation truth: the desktop sidebar and the
+// mobile tab strip both read it, so no view can gain a duplicate entry.
+const navGroups: {
+  label: string;
+  items: { view: View; label: string; short: string; Icon: LucideIcon }[];
+}[] = [
+  {
+    label: "Trends",
+    items: [
+      {
+        view: "Performance",
+        label: "Performance",
+        short: "Perf",
+        Icon: TrendingUp,
+      },
+      {
+        view: "Candlestick",
+        label: "Candlestick",
+        short: "Candles",
+        Icon: ChartCandlestick,
+      },
+      {
+        view: "Monthly heatmap",
+        label: "Monthly returns",
+        short: "Monthly",
+        Icon: CalendarDays,
+      },
+    ],
+  },
+  {
+    label: "Composition",
+    items: [
+      {
+        view: "Allocation",
+        label: "Allocation",
+        short: "Alloc",
+        Icon: ChartPie,
+      },
+      { view: "Treemap", label: "Treemap", short: "Treemap", Icon: LayoutGrid },
+      { view: "Hierarchy", label: "Hierarchy", short: "Tree", Icon: ListTree },
+      {
+        view: "Sector bars",
+        label: "Sector bars",
+        short: "Sectors",
+        Icon: ChartColumn,
+      },
+    ],
+  },
+  {
+    label: "Risk & links",
+    items: [
+      {
+        view: "Risk & return",
+        label: "Risk vs return",
+        short: "Risk",
+        Icon: ChartScatter,
+      },
+      {
+        view: "Distribution",
+        label: "Distribution",
+        short: "Spread",
+        Icon: ChartNoAxesColumn,
+      },
+      {
+        view: "Correlation",
+        label: "Correlation",
+        short: "Corr",
+        Icon: Grid3x3,
+      },
+      { view: "Network", label: "Network", short: "Links", Icon: Network },
+    ],
+  },
+  {
+    label: "Flow & place",
+    items: [
+      {
+        view: "Money flow",
+        label: "Money flow",
+        short: "Flow",
+        Icon: Waypoints,
+      },
+      { view: "Geography", label: "Geography", short: "Map", Icon: Globe },
+    ],
+  },
+];
+const navItems = navGroups.flatMap((g) =>
+  g.items.map((item) => ({ ...item, group: g.label })),
+);
+const smoothly = () =>
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ? ("auto" as const)
+    : ("smooth" as const);
 export default function Home() {
   const [source] = useState(() => createSimulationSource());
   const [snapshot, setSnapshot] = useState(() => source.initial());
   const [live, setLive] = useState(true);
-  const [section, setSection] = useState("Overview");
-  const [dataset, setDataset] = useState("Portfolio");
+  const [view, setView] = useState<View>("Performance");
+  const strip = useRef<HTMLElement>(null);
   const assets = useMemo(() => enrich(snapshot.assets), [snapshot]);
   const ideas = useMemo(() => insights(assets), [assets]);
   const stats = useMemo(() => portfolioStats(assets), [assets]);
   const value = stats.value;
+  const active = navItems.find((i) => i.view === view) ?? navItems[0];
   useEffect(() => {
     if (!live) return;
     return source.subscribe(setSnapshot);
   }, [live, source]);
+  // Keep the active mobile chip in sight without moving the page itself.
+  useEffect(() => {
+    const bar = strip.current;
+    const chip = bar?.querySelector<HTMLElement>('[data-active="true"]');
+    if (!bar || !chip || !bar.clientWidth) return;
+    bar.scrollTo({
+      left: chip.offsetLeft - bar.clientWidth / 2 + chip.clientWidth / 2,
+      behavior: smoothly(),
+    });
+  }, [view]);
   useEffect(() => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
@@ -81,76 +193,60 @@ export default function Home() {
       if (frame) cancelAnimationFrame(frame);
     };
   }, []);
+  // Switch the view and bring the chart into sight, unless it already is.
+  function show(next: View) {
+    setView(next);
+    const panel = document.getElementById("visualization");
+    if (!panel) return;
+    const { top } = panel.getBoundingClientRect();
+    if (top < 56 || top > 220)
+      panel.scrollIntoView({ behavior: smoothly(), block: "start" });
+  }
   return (
     <SidebarProvider>
       <Sidebar className="app-sidebar">
         <SidebarHeader>
           <a className="brand" href="/">
             <span className="brand-mark">
-              <ChartNoAxesCombined size={23} />
+              <ChartNoAxesCombined size={19} />
             </span>
             folio<span className="brand-dot">.</span>
           </a>
         </SidebarHeader>
         <SidebarContent>
-          <div className="workspace">
-            <span className="workspace-icon">P</span>
-            <div>
-              Personal workspace<small>Demo portfolio</small>
-            </div>
-          </div>
-          <p className="nav-label">WORKSPACE</p>
-          <SidebarMenu>
-            {(
-              [
-                ["Overview", Compass],
-                ["Explore data", ChartNoAxesCombined],
-                ["Relationships", Network],
-                ["Portfolio", Wallet],
-                ["Insights", Sparkles],
-              ] as const
-            ).map(([label, Icon]) => (
-              <SidebarMenuItem key={String(label)}>
-                <SidebarMenuButton
-                  isActive={section === label}
-                  onClick={() => setSection(String(label))}
-                >
-                  <Icon size={19} />
-                  <span>{String(label)}</span>
-                  {section === label && <span className="nav-indicator" />}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-          <div className="sidebar-note">
-            <span className="note-icon">✳</span>
-            <b>
-              A little clarity.
-              <br />A better perspective.
-            </b>
-            <p>Explore the stories behind your numbers.</p>
-          </div>
+          {navGroups.map((group) => (
+            <Fragment key={group.label}>
+              <p className="nav-label">{group.label.toUpperCase()}</p>
+              <SidebarMenu>
+                {group.items.map(({ view: item, label, Icon }) => (
+                  <SidebarMenuItem key={item}>
+                    <SidebarMenuButton
+                      isActive={view === item}
+                      onClick={() => show(item)}
+                    >
+                      <Icon size={17} />
+                      <span>{label}</span>
+                      {view === item && <span className="nav-indicator" />}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </Fragment>
+          ))}
         </SidebarContent>
         <SidebarFooter>
           <div className="simulation-label">
             <span />
             Simulated market data
           </div>
-          <div className="profile">
-            <span>AS</span>
-            <div>
-              Ayush’s workspace<small>Personal account</small>
-            </div>
-          </div>
         </SidebarFooter>
       </Sidebar>
       <div className="app-main">
         <header className="topbar">
           <div>
-            <SidebarTrigger />
-            <span>Workspace</span>
+            <span>Visualizations</span>
             <ChevronRight size={14} />
-            <b>{section}</b>
+            <b>{active.label}</b>
           </div>
           <span className="topbar-right">
             <span className="demo-tag">DEMO</span>All values in INR{" "}
@@ -161,21 +257,8 @@ export default function Home() {
         <main>
           <div className="page-heading">
             <div>
-              <div className="eyebrow">YOUR DATA, A CLEARER PICTURE</div>
-              <h1>
-                {section === "Overview"
-                  ? "See the bigger picture."
-                  : section === "Explore data"
-                    ? "Follow your curiosity."
-                    : section === "Relationships"
-                      ? "Everything is connected."
-                      : section === "Portfolio"
-                        ? "Know what you own."
-                        : "The story behind the numbers."}
-              </h1>
-              <p>
-                Understand what’s moving, what’s connected, and what matters.
-              </p>
+              <div className="eyebrow">{active.group.toUpperCase()}</div>
+              <h1>{explanations[view][0]}</h1>
             </div>
             <button
               className={"live-button " + (!live ? "paused" : "")}
@@ -185,25 +268,6 @@ export default function Home() {
               {live ? "Simulation live" : "Simulation paused"}
               <span className="live-dot" />
             </button>
-          </div>
-          <div className="dataset-row">
-            <Tabs value={dataset} onValueChange={setDataset}>
-              <TabsList variant="line">
-                {["Portfolio", "Market", "Transactions"].map((x) => (
-                  <TabsTrigger value={x} key={x}>
-                    {x === "Portfolio" ? (
-                      <Wallet />
-                    ) : x === "Market" ? (
-                      <Activity />
-                    ) : (
-                      <Layers />
-                    )}
-                    {x}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
-            <span className="muted">30 assets · 7 countries</span>
           </div>
           <div className="metrics">
             <div>
@@ -240,6 +304,7 @@ export default function Home() {
               </small>
             </div>
           </div>
+          <Explorer snapshot={snapshot} view={view} onViewChange={setView} />
           <SpotlightCard
             className="insight-spotlight"
             spotlightColor="rgba(121, 167, 255, 0.16)"
@@ -251,19 +316,38 @@ export default function Home() {
                 <p>{ideas[2]?.text}</p>
               </div>
               <button
-                onClick={() => setSection("Relationships")}
+                onClick={() => show("Network")}
                 aria-label="Explore relationships"
               >
                 <ArrowUpRight size={20} />
               </button>
             </div>
           </SpotlightCard>
-          <Explorer snapshot={snapshot} section={section} dataset={dataset} />
           <footer>
             Built for understanding.{" "}
             <span>Reproducible simulation · Not live market prices</span>
           </footer>
         </main>
+        <nav className="viz-tabs" aria-label="Visualizations" ref={strip}>
+          {navGroups.map((group, index) => (
+            <Fragment key={group.label}>
+              {index > 0 && <span className="viz-divider" aria-hidden="true" />}
+              {group.items.map(({ view: item, label, short, Icon }) => (
+                <button
+                  key={item}
+                  className="viz-chip"
+                  data-active={view === item}
+                  aria-current={view === item ? "page" : undefined}
+                  aria-label={label}
+                  onClick={() => show(item)}
+                >
+                  <Icon size={18} />
+                  {short}
+                </button>
+              ))}
+            </Fragment>
+          ))}
+        </nav>
       </div>
     </SidebarProvider>
   );

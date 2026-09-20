@@ -39,6 +39,60 @@ export const views: View[] = [
   "Allocation",
   "Monthly heatmap",
 ];
+export const explanations: Record<View, [string, string]> = {
+  Performance: [
+    "See how your investment has grown",
+    "Drag the handles below to zoom into a period. Compare assets using returns to put different prices on equal footing.",
+  ],
+  Candlestick: [
+    "The story inside each trading day",
+    "Each candle shows the open and close. The thin line reaches the day\u2019s high and low; volume sits below.",
+  ],
+  "Sector bars": [
+    "Which sectors are leading?",
+    "Longer bars mean a larger value for your selected metric. Select a sector to explore its companies.",
+  ],
+  "Risk & return": [
+    "Is more movement bringing more return?",
+    "Higher points gained more this month. Points further right have more of the selected characteristic. Tap a point to meet the company.",
+  ],
+  Correlation: [
+    "How similarly have these assets moved?",
+    "Deep purple means assets tend to move together. Pink means they tend to move in opposite directions. Based on the last 60 observations.",
+  ],
+  Distribution: [
+    "What does a typical asset look like?",
+    "The histogram counts assets in each range. The box shows the middle half of assets; the center line is the median. Points beyond the whiskers are unusually far from the others.",
+  ],
+  Treemap: [
+    "Understand the whole at a glance",
+    "Larger tiles carry more of your selected size metric. Green indicates positive return; pink indicates a decline.",
+  ],
+  Network: [
+    "These companies tend to move together",
+    "Larger circles represent larger companies. Color identifies sector; dashed borders flag higher risk. Stronger relationships have thicker, more visible lines.",
+  ],
+  Hierarchy: [
+    "Explore what sits inside your portfolio",
+    "Expand a sector to reveal its assets. Search focuses the tree; tap a company to see its details.",
+  ],
+  "Money flow": [
+    "Follow the money",
+    "Flow width represents rupees. Follow capital through sectors and companies into the portfolio. Tap a connection for its value.",
+  ],
+  Geography: [
+    "Where are your companies based?",
+    "Each marker represents a headquarters country. Larger markers mean a greater portfolio allocation. This is not a measure of revenue exposure.",
+  ],
+  Allocation: [
+    "See where your money is allocated",
+    "Each segment shows the percentage of the original investment allocated to a sector. Select a sector to explore further.",
+  ],
+  "Monthly heatmap": [
+    "Find the good months and the difficult ones",
+    "Each tile is one company\u2019s return in a calendar month. Green is a gain and pink is a loss. Tap a tile for the actual percentage.",
+  ],
+};
 export const ranges: Record<string, number> = {
   "1D": 1,
   "1W": 5,

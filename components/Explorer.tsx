@@ -49,7 +49,7 @@ import {
   chartOption,
   views,
   ranges,
-  metrics,
+  explanations,
   type View,
   type ChartMetric,
 } from "@/lib/transformations";
@@ -87,68 +87,14 @@ function Picker({
     </div>
   );
 }
-const explanations: Record<View, [string, string]> = {
-  Performance: [
-    "See how your investment has grown",
-    "Drag the handles below to zoom into a period. Compare assets using returns to put different prices on equal footing.",
-  ],
-  Candlestick: [
-    "The story inside each trading day",
-    "Each candle shows the open and close. The thin line reaches the day’s high and low; volume sits below.",
-  ],
-  "Sector bars": [
-    "Which sectors are leading?",
-    "Longer bars mean a larger value for your selected metric. Select a sector to explore its companies.",
-  ],
-  "Risk & return": [
-    "Is more movement bringing more return?",
-    "Higher points gained more this month. Points further right have more of the selected characteristic. Tap a point to meet the company.",
-  ],
-  Correlation: [
-    "How similarly have these assets moved?",
-    "Deep purple means assets tend to move together. Pink means they tend to move in opposite directions. Based on the last 60 observations.",
-  ],
-  Distribution: [
-    "What does a typical asset look like?",
-    "The histogram counts assets in each range. The box shows the middle half of assets; the center line is the median. Points beyond the whiskers are unusually far from the others.",
-  ],
-  Treemap: [
-    "Understand the whole at a glance",
-    "Larger tiles carry more of your selected size metric. Green indicates positive return; pink indicates a decline.",
-  ],
-  Network: [
-    "These companies tend to move together",
-    "Larger circles represent larger companies. Color identifies sector; dashed borders flag higher risk. Stronger relationships have thicker, more visible lines.",
-  ],
-  Hierarchy: [
-    "Explore what sits inside your portfolio",
-    "Expand a sector to reveal its assets. Search focuses the tree; tap a company to see its details.",
-  ],
-  "Money flow": [
-    "Follow the money",
-    "Flow width represents rupees. Follow capital through sectors and companies into the portfolio. Tap a connection for its value.",
-  ],
-  Geography: [
-    "Where are your companies based?",
-    "Each marker represents a headquarters country. Larger markers mean a greater portfolio allocation. This is not a measure of revenue exposure.",
-  ],
-  Allocation: [
-    "See where your money is allocated",
-    "Each segment shows the percentage of the original investment allocated to a sector. Select a sector to explore further.",
-  ],
-  "Monthly heatmap": [
-    "Find the good months and the difficult ones",
-    "Each tile is one company’s return in a calendar month. Green is a gain and pink is a loss. Tap a tile for the actual percentage.",
-  ],
-};
 export default function Explorer({
   snapshot,
-  section,
-  dataset,
+  view,
+  onViewChange,
 }: {
   snapshot: MarketSnapshot;
-  section: string;
-  dataset: string;
+  view: View;
+  onViewChange: (view: View) => void;
 }) {
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
@@ -158,7 +104,7 @@ export default function Explorer({
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class", "data-theme"] });
     return () => observer.disconnect();
   }, []);
-  const [view, setView] = useState<View>("Performance");
+  const setView = onViewChange;
   const [metric, setMetric] = useState<ChartMetric>("Cumulative return");
   const [range, setRange] = useState("1Y");
   const [sector, setSector] = useState("All sectors");
@@ -174,6 +120,7 @@ export default function Explorer({
   const [distribution, setDistribution] = useState("Daily returns");
   const [allocation, setAllocation] = useState("Donut");
   const [threshold, setThreshold] = useState(0.52);
+  const [flowSource, setFlowSource] = useState("Transactions");
   const [detail, setDetail] = useState("");
   const [sheet, setSheet] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -197,29 +144,8 @@ export default function Explorer({
   const ideas = useMemo(() => insights(assets), [assets]);
   const connections = useMemo(() => relationships(assets), [assets]);
   const chosen = all.find((a) => a.ticker === selected);
-  const actualView =
-    view === "Allocation" &&
-    ["Treemap", "Hierarchy", "Network"].includes(allocation)
-      ? (allocation as View)
-      : view;
   useEffect(() => {
-    if (section === "Relationships") setView("Network");
-    else if (section === "Portfolio") setView("Allocation");
-    else if (section === "Overview") setView("Performance");
-  }, [section]);
-  useEffect(() => {
-    if (dataset === "Transactions") {
-      setView("Money flow");
-      setMetric("Volume");
-    } else if (dataset === "Market") {
-      setView("Treemap");
-      setSize("Market cap");
-    } else {
-      setView("Performance");
-      setMetric("Cumulative return");
-    }
-  }, [dataset]);
-  useEffect(() => {
+    setDetail("");
     if (view === "Candlestick") {
       setStyle("Candlestick");
       setMetric("Price");
@@ -298,7 +224,7 @@ export default function Explorer({
   const option = useMemo(
     () =>
       chartOption(assets, snapshot.transactions, {
-        view: actualView,
+        view,
         range,
         metric,
         selected,
@@ -310,12 +236,12 @@ export default function Explorer({
         trend,
         distribution,
         allocation,
-        dataset,
+        dataset: flowSource,
       }, isDark),
     [
       assets,
       snapshot.transactions,
-      actualView,
+      view,
       range,
       metric,
       selected,
@@ -327,7 +253,7 @@ export default function Explorer({
       trend,
       distribution,
       allocation,
-      dataset,
+      flowSource,
       isDark,
     ],
   );
@@ -344,7 +270,7 @@ export default function Explorer({
     if (e.seriesType === "heatmap" && Array.isArray(e.value)) {
       const value = Number(e.value[2]);
       setDetail(
-        actualView === "Correlation"
+        view === "Correlation"
           ? `${name}: ${value > 0.6 ? "These assets have usually moved in the same direction." : value < 0 ? "These assets have often moved in opposite directions." : "These assets have a limited shared movement pattern."} Relationship score: ${value.toFixed(2)}.`
           : `${name}: ${pct(value)} for the month.`,
       );
@@ -362,7 +288,7 @@ export default function Explorer({
           .find((g) => g.name === name)
           ?.value.toFixed(1)}% of your portfolio.`,
       );
-    } else if (e.seriesType === "scatter" && actualView === "Geography") {
+    } else if (e.seriesType === "scatter" && view === "Geography") {
       const values = e.value as number[];
       setDetail(
         `${name} is home to ${assets.filter((a) => a.country === name).length} companies, representing ${values[2].toFixed(1)}% of your original investment.`,
@@ -496,22 +422,12 @@ export default function Explorer({
         fillOpacity={0.16}
       >
         <section
+          id="visualization"
           className={"panel explorer " + (expanded ? "expanded" : "")}
           aria-label="Data explorer"
         >
         <div className="panel-heading">
-          <div>
-            <h2>
-              {section === "Relationships"
-                ? "How your assets move together"
-                : dataset === "Market"
-                  ? "The market, in perspective"
-                  : dataset === "Transactions"
-                    ? "Follow your money"
-                    : "Your portfolio, in perspective"}
-            </h2>
-            <p>One dataset. More ways to understand it.</p>
-          </div>
+          <h2>{view}</h2>
           <div className="panel-actions">
             <button
               onClick={download}
@@ -530,21 +446,12 @@ export default function Explorer({
           </div>
         </div>
         <div className="explorer-controls">
-          <Picker
-            label="Visualization"
-            value={view}
-            onChange={(v) => {
-              setView(v as View);
-              setDetail("");
-            }}
-            items={views}
-          />
           {["Performance", "Sector bars", "Risk & return"].includes(
-            actualView,
+            view,
           ) && (
             <Picker
               label={
-                actualView === "Risk & return" ? "Horizontal axis" : "Metric"
+                view === "Risk & return" ? "Horizontal axis" : "Metric"
               }
               value={metric}
               onChange={(v) => {
@@ -553,7 +460,7 @@ export default function Explorer({
                   setSelected(assets[0]?.ticker || "Portfolio");
               }}
               items={
-                actualView === "Performance"
+                view === "Performance"
                   ? [
                       "Cumulative return",
                       "Price",
@@ -561,7 +468,7 @@ export default function Explorer({
                       "Volume",
                       "Volatility",
                     ]
-                  : actualView === "Risk & return"
+                  : view === "Risk & return"
                     ? ["Volatility", "Momentum", "Volume", "Market cap"]
                     : [
                         "Monthly return",
@@ -608,7 +515,7 @@ export default function Explorer({
           </label>
         </div>
         <div className="chart-toolbar">
-          {["Performance", "Candlestick"].includes(actualView) ? (
+          {["Performance", "Candlestick"].includes(view) ? (
             <>
               <Tabs value={range} onValueChange={setRange}>
                 <TabsList>
@@ -625,12 +532,12 @@ export default function Explorer({
                   value={selected}
                   onChange={setSelected}
                   items={
-                    actualView === "Candlestick"
+                    view === "Candlestick"
                       ? assets.map((a) => a.ticker)
                       : ["Portfolio", ...assets.map((a) => a.ticker)]
                   }
                 />
-                {actualView === "Performance" && (
+                {view === "Performance" && (
                   <Picker
                     label="Compare"
                     value={compare}
@@ -646,14 +553,14 @@ export default function Explorer({
                   value={style}
                   onChange={setStyle}
                   items={
-                    actualView === "Candlestick"
+                    view === "Candlestick"
                       ? ["Candlestick", "Line", "Area"]
                       : ["Area", "Line"]
                   }
                 />
               </div>
             </>
-          ) : actualView === "Network" ? (
+          ) : view === "Network" ? (
             <>
               <span className="toolbar-caption">
                 {assets.length} companies ·{" "}
@@ -672,7 +579,7 @@ export default function Explorer({
                 />
               </div>
             </>
-          ) : actualView === "Treemap" ? (
+          ) : view === "Treemap" ? (
             <>
               <Picker
                 label="Size by"
@@ -687,7 +594,7 @@ export default function Explorer({
                 items={["Daily return", "Monthly return", "Volatility"]}
               />
             </>
-          ) : actualView === "Distribution" ? (
+          ) : view === "Distribution" ? (
             <>
               <Picker
                 label="Measure"
@@ -702,27 +609,31 @@ export default function Explorer({
                 items={["Histogram", "Box plot"]}
               />
             </>
-          ) : actualView === "Risk & return" ? (
+          ) : view === "Risk & return" ? (
             <label className="switch-label">
               <Switch checked={trend} onCheckedChange={setTrend} />
               Show overall trend
             </label>
-          ) : ["Sector bars", "Correlation"].includes(actualView) ? (
+          ) : ["Sector bars", "Correlation"].includes(view) ? (
             <Picker
               label="Sort"
               value={sort}
               onChange={setSort}
               items={["Descending", "Ascending"]}
             />
+          ) : view === "Money flow" ? (
+            <>
+              <span className="toolbar-caption">Tap any flow to explore</span>
+              <Picker
+                label="Flow source"
+                value={flowSource}
+                onChange={setFlowSource}
+                items={["Transactions", "Allocation"]}
+              />
+            </>
           ) : (
             <span className="toolbar-caption">
-              Tap any{" "}
-              {actualView === "Money flow"
-                ? "flow"
-                : actualView === "Hierarchy"
-                  ? "branch"
-                  : "segment"}{" "}
-              to explore
+              Tap any {view === "Hierarchy" ? "branch" : "segment"} to explore
             </span>
           )}
           {view === "Allocation" && (
@@ -730,13 +641,7 @@ export default function Explorer({
               label="Show allocation as"
               value={allocation}
               onChange={setAllocation}
-              items={[
-                "Donut",
-                "Treemap",
-                "Stacked bar",
-                "Hierarchy",
-                "Network",
-              ]}
+              items={["Donut", "Stacked bar"]}
             />
           )}
         </div>
@@ -753,7 +658,7 @@ export default function Explorer({
                     <div className="loading">Loading visualization…</div>
                   }
                 >
-                  {actualView === "Network" ? (
+                  {view === "Network" ? (
                     <NetworkGraph
                       assets={assets}
                       selected={selected}
@@ -761,7 +666,7 @@ export default function Explorer({
                       threshold={threshold}
                       isDark={isDark}
                     />
-                  ) : actualView === "Hierarchy" ? (
+                  ) : view === "Hierarchy" ? (
                     <div className="tree-layout">
                       <Chart option={option} onClick={chartClick} isDark={isDark} />
                       <div className="mobile-tree">
@@ -794,7 +699,7 @@ export default function Explorer({
                     <Chart
                       option={option}
                       onClick={chartClick}
-                      map={actualView === "Geography"}
+                      map={view === "Geography"}
                       isDark={isDark}
                     />
                   )}
@@ -808,7 +713,7 @@ export default function Explorer({
                 "Allocation",
                 "Risk & return",
                 "Sector bars",
-              ].includes(actualView) ? (
+              ].includes(view) ? (
                 allocations(assets).map((g) => (
                   <button
                     key={g.name}
@@ -823,11 +728,11 @@ export default function Explorer({
                 ))
               ) : (
                 <span>
-                  {actualView === "Geography"
+                  {view === "Geography"
                     ? "Natural Earth boundaries · Country-level headquarters locations"
-                    : actualView === "Correlation"
+                    : view === "Correlation"
                       ? `Showing ${Math.min(14, assets.length)} assets · Filter or search to focus the matrix`
-                      : actualView === "Monthly heatmap"
+                      : view === "Monthly heatmap"
                         ? `Showing ${Math.min(10, assets.length)} assets · Search to focus a company`
                         : `${assets.length} assets in selection · ${date}`}
                 </span>
@@ -852,10 +757,10 @@ export default function Explorer({
         <div className="chart-explanation">
           <Info size={16} />
           <div>
-            <b>{explanations[actualView][0]}</b>
+            <b>How to read this</b>
             <p>
-              {detail || explanations[actualView][1]}
-              {actualView === "Distribution" &&
+              {detail || explanations[view][1]}
+              {view === "Distribution" &&
                 assets.length > 0 &&
                 ` Median: ${q(0.5).toFixed(2)}%. The middle half lies between ${q(0.25).toFixed(2)}% and ${q(0.75).toFixed(2)}%.`}
             </p>
@@ -863,14 +768,6 @@ export default function Explorer({
         </div>
         </section>
       </BorderGlow>
-      {section === "Insights" ? (
-        <div className="insights-heading">
-          <h2>Patterns in your selection</h2>
-          <p>
-            Calculated from {assets.length} assets as of {date}.
-          </p>
-        </div>
-      ) : null}
       <div className="bottom-grid">
         {ideas.map((i, n) => (
           <article className="insight-card" key={i.title}>
