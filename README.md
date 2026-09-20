@@ -47,3 +47,17 @@ TypeScript and production build pass. Tests cover reproducibility, OHLC integrit
 Full browser/touch/keyboard interaction and visual layout testing could not be performed in the authoring environment: no browser connector was available and native computer-use permission was unavailable. SVG rendering checks are not substitutes for device QA. The optional feature-detected WebMCP configure tool was not verified in a supporting browser.
 
 Known demo scope: 30 assets; large-universe performance is not benchmarked. The network renders a small SVG graph. CSV export contains the current filtered synthetic asset data. These are simulated analytics, not investment recommendations.
+
+## Deploy to the Syncqtech Cloudflare account
+
+```sh
+npm run deploy:cloudflare
+```
+
+This builds the app and deploys the `folio-analytics` Worker using `wrangler.cloudflare.jsonc`, pinned to Syncqtech@gmail.com's account. Run `npx wrangler whoami` to check your active Cloudflare login. A user with access to that account must be authenticated.
+
+`npm run deploy:cloudflare:check` builds and performs a dry run without publishing. The direct Cloudflare deployment uses a public workers.dev URL, serves the same synthetic demo, and enables Worker logs and sampled traces. The existing private Sites deployment is separate.
+
+Live URL: https://folio-analytics.syncqtech.workers.dev
+
+The compatibility date uses the deployment's UTC date (2026-09-19); Cloudflare rejects dates later than its current UTC day.

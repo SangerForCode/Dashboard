@@ -13,7 +13,9 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "test": "node scripts/test-analytics.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "deploy:cloudflare": "npm run build && wrangler deploy --config wrangler.cloudflare.jsonc",
+    "deploy:cloudflare:check": "npm run build && wrangler deploy --config wrangler.cloudflare.jsonc --dry-run"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
