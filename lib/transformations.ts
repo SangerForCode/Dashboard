@@ -872,34 +872,6 @@ export function chartOption(
           xAxis: { type: "value", max: 100, ...ax },
           yAxis: { type: "category", data: ["Portfolio"], ...ax },
         }
-      : {
-          graphic: [
-            {
-              type: "text",
-              left: "40%",
-              top: "45%",
-              style: {
-                text: `${all.length} assets`,
-                align: "center",
-                verticalAlign: "middle",
-                fontSize: 25,
-                fontWeight: 500,
-                fill: theme.strong,
-              },
-            },
-            {
-              type: "text",
-              left: "40%",
-              top: "55%",
-              style: {
-                text: "Across " + groups.length + " sectors",
-                align: "center",
-                verticalAlign: "middle",
-                fontSize: 12,
-                fill: theme.text,
-              },
-            },
-          ],
-        }),
+      : {}),
   };
 }
